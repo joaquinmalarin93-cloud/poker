@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Fichas de Póker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate 900 - Fondo oscuro estilo casino */
+            color: #f8fafc; /* Slate 50 - Texto claro */
+        }
+
+        /* Colores de las fichas */
+        .chip-white { background: linear-gradient(135deg, #ffffff, #e2e8f0); color: #0f172a; border: 2px solid #cbd5e1; }
+        .chip-red { background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; border: 2px solid #7f1d1d; }
+        .chip-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; border: 2px solid #1e3a8a; }
+        .chip-green { background: linear-gradient(135deg, #10b981, #047857); color: white; border: 2px solid #064e3b; }
+        .chip-black { background: linear-gradient(135deg, #334155, #0f172a); color: white; border: 2px solid #000000; }
+
+        .poker-chip {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.3), 0 2px 4px rgba(0,0,0,0.5);
+            margin-right: 0.5rem;
+            position: relative;
+        }
+        
+        /* Decoración de borde punteado para parecer ficha real */
+        .poker-chip::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 2px; right: 2px; bottom: 2px;
+            border: 1px dashed rgba(255,255,255,0.5);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .chip-white::after { border-color: rgba(0,0,0,0.2); }
+
+        /* Estilo para los inputs dark mode */
+        .input-dark {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            color: white;
+        }
+        .input-dark:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold mb-2 flex items-center justify-center gap-3 text-emerald-400">
+                <i class="fa-solid fa-coins"></i> Poker Bank
+            </h1>
+            <p class="text-slate-400">Calculadora y Administrador de Fichas</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Panel Izquierdo: Configuración -->
+            <div class="space-y-6">
+                
+                <!-- Configuración de Valores de Fichas -->
+                <div class="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700">
+                    <h2 class="text-xl font-semibold mb-4 border-b border-slate-700 pb-2 text-slate-200">
+                        <i class="fa-solid fa-gear mr-2"></i> Valores de Fichas ($)
+                    </h2>
+                    
+                    <div class="space-y-4" id="chip-config-container">
+                        <!-- Blanca -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="poker-chip chip-white"></span>
+                                <span class="text-sm font-medium">Blancas</span>
+                            </div>
+                            <input type="number" id="val-white" class="input-dark w-24 px-3 py-1.5 rounded-lg text-right" value="10" min="0.1" step="any">
+                        </div>
+                        <!-- Roja -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="poker-chip chip-red"></span>
+                                <span class="text-sm font-medium">Rojas</span>
+                            </div>
+                            <input type="number" id="val-red" class="input-dark w-24 px-3 py-1.5 rounded-lg text-right" value="50" min="0.1" step="any">
+                        </div>
+                        <!-- Azul -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="poker-chip chip-blue"></span>
+                                <span class="text-sm font-medium">Azules</span>
+                            </div>
+                            <input type="number" id="val-blue" class="input-dark w-24 px-3 py-1.5 rounded-lg text-right" value="100" min="0.1" step="any">
+                        </div>
+                        <!-- Verde -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="poker-chip chip-green"></span>
+                                <span class="text-sm font-medium">Verdes</span>
+                            </div>
+                            <input type="number" id="val-green" class="input-dark w-24 px-3 py-1.5 rounded-lg text-right" value="250" min="0.1" step="any">
+                        </div>
+                        <!-- Negra -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="poker-chip chip-black"></span>
+                                <span class="text-sm font-medium">Negras</span>
+                            </div>
+                            <input type="number" id="val-black" class="input-dark w-24 px-3 py-1.5 rounded-lg text-right" value="1000" min="0.1" step="any">
+                        </div>
+                    </div>
+                    <button onclick="updateChipValues()" class="w-full mt-5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200">
+                        Actualizar Valores
+                    </button>
+                </div>
+
+                <!-- Agregar Nuevo Jugador -->
+                <div class="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700">
+                    <h2 class="text-xl font-semibold mb-4 border-b border-slate-700 pb-2 text-slate-200">
+                        <i class="fa-solid fa-user-plus mr-2"></i> Nuevo Jugador
+                    </h2>
+                    
+                    <form id="add-player-form" onsubmit="addPlayer(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-1">Nombre</label>
+                            <input type="text" id="new-player-name" required placeholder="Ej: Juan" class="input-dark w-full px-4 py-2 rounded-lg">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-1">Dinero ($)</label>
+                            <input type="number" id="new-player-money" required placeholder="Ej: 500" min="1" step="any" class="input-dark w-full px-4 py-2 rounded-lg">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex justify-center items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Ingresar Jugador
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Resumen Total -->
+                <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 shadow-xl border border-slate-700">
+                     <h2 class="text-xl font-semibold mb-4 text-slate-200">Resumen de la Mesa</h2>
+                     <div class="space-y-3">
+                         <div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg">
+                             <span class="text-slate-400">Total en Pozo:</span>
+                             <span id="total-money" class="text-2xl font-bold text-emerald-400">$0.00</span>
+                         </div>
+                         <div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg">
+                             <span class="text-slate-400">Total Fichas:</span>
+                             <span id="total-chips" class="text-xl font-bold text-blue-400">0</span>
+                         </div>
+                     </div>
+                </div>
+
+            </div>
+
+            <!-- Panel Derecho: Lista de Jugadores -->
+            <div class="lg:col-span-2">
+                <div class="bg-slate-800 rounded-xl p-6 shadow-xl border border-slate-700 min-h-full">
+                    <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-4">
+                        <h2 class="text-2xl font-semibold text-slate-200">
+                            <i class="fa-solid fa-users mr-2"></i> Jugadores en Mesa (<span id="player-count">0</span>)
+                        </h2>
+                        <button onclick="clearAllPlayers()" class="text-red-400 hover:text-red-300 text-sm flex items-center gap-1 transition-colors">
+                            <i class="fa-solid fa-trash-can"></i> Limpiar Mesa
+                        </button>
+                    </div>
+
+                    <!-- Contenedor donde se inyectarán las tarjetas de los jugadores -->
+                    <div id="players-container" class="space-y-4">
+                        <!-- Mensaje de estado vacío -->
+                        <div id="empty-state" class="text-center py-12 text-slate-500">
+                            <i class="fa-solid fa-hands-holding-circle text-6xl mb-4 opacity-50"></i>
+                            <p class="text-lg">No hay jugadores en la mesa.</p>
+                            <p class="text-sm mt-2">Agrega jugadores usando el panel izquierdo.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Configuración inicial de valores de fichas
+        let chipValues = {
+            white: 10,
+            red: 50,
+            blue: 100,
+            green: 250,
+            black: 1000
+        };
+
+        // Arreglo para almacenar la información de los jugadores
+        let players = [];
+
+        // Elementos del DOM
+        const playersContainer = document.getElementById('players-container');
+        const emptyState = document.getElementById('empty-state');
+        const totalMoneyEl = document.getElementById('total-money');
+        const totalChipsEl = document.getElementById('total-chips');
+        const playerCountEl = document.getElementById('player-count');
+
+        // Actualizar valores de las fichas desde los inputs
+        function updateChipValues() {
+            const newValues = {
+                white: parseFloat(document.getElementById('val-white').value),
+                red: parseFloat(document.getElementById('val-red').value),
+                blue: parseFloat(document.getElementById('val-blue').value),
+                green: parseFloat(document.getElementById('val-green').value),
+                black: parseFloat(document.getElementById('val-black').value)
+            };
+
+            // Validar que no haya valores negativos o nulos
+            for (const key in newValues) {
+                if (isNaN(newValues[key]) || newValues[key] <= 0) {
+                    alert("Por favor, ingresa valores válidos mayores a 0 para todas las fichas.");
+                    return; // Aborta la actualización
+                }
+            }
+
+            chipValues = newValues;
+            
+            // Recalcular el reparto para todos los jugadores con los nuevos valores
+            players.forEach(player => {
+                player.chips = calculateChips(player.money);
+            });
+            
+            renderPlayers();
+            updateSummary();
+            
+            // Feedback visual simple
+            const btn = document.querySelector('button[onclick="updateChipValues()"]');
+            const originalText = btn.innerText;
+            btn.innerText = "¡Actualizado!";
+            btn.classList.replace('bg-emerald-600', 'bg-emerald-400');
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.replace('bg-emerald-400', 'bg-emerald-600');
+            }, 1500);
+        }
+
+        // Algoritmo para calcular cuántas fichas dar por una cantidad de dinero
+        function calculateChips(amount) {
+            let remaining = amount;
+            let result = {
+                black: 0, green: 0, blue: 0, red: 0, white: 0
+            };
+
+            // Intentar dar 10 de cada una de las fichas menores para asegurar una distribución base equilibrada
+            const targetStacks = [
+                { color: 'white', count: 10 },
+                { color: 'red', count: 10 },
+                { color: 'blue', count: 10 },
+                { color: 'green', count: 4 } // 4 verdes para balancear
+            ];
+
+            for (const stack of targetStacks) {
+                let cost = stack.count * chipValues[stack.color];
+                if (remaining >= cost) {
+                    result[stack.color] = stack.count;
+                    remaining = parseFloat((remaining - cost).toFixed(2));
+                } else if (remaining >= chipValues[stack.color]) {
+                    // Si no alcanza para 10, dale las que alcance sin agotar el pozo
+                    let max = Math.floor(remaining / chipValues[stack.color]);
+                    result[stack.color] = max;
+                    remaining = parseFloat((remaining - (max * chipValues[stack.color])).toFixed(2));
+                }
+            }
+
+            // El dinero que sobra se reparte de mayor a menor para ocupar fichas grandes
+            const sortedChips = [
+                { color: 'black', value: chipValues.black },
+                { color: 'green', value: chipValues.green },
+                { color: 'blue', value: chipValues.blue },
+                { color: 'red', value: chipValues.red },
+                { color: 'white', value: chipValues.white }
+            ];
+
+            for (const chip of sortedChips) {
+                if (remaining >= chip.value) {
+                    const count = Math.floor(remaining / chip.value);
+                    result[chip.color] += count;
+                    remaining = parseFloat((remaining - (count * chip.value)).toFixed(2));
+                }
+            }
+
+            return result;
+        }
+
+        // Agregar un nuevo jugador
+        function addPlayer(event) {
+            event.preventDefault(); // Evita que el formulario recargue la página
+
+            const nameInput = document.getElementById('new-player-name');
+            const moneyInput = document.getElementById('new-player-money');
+
+            const name = nameInput.value.trim();
+            const money = parseFloat(moneyInput.value);
+
+            if (name === '' || isNaN(money) || money <= 0) {
+                return; // Validación básica
+            }
+
+            const chipsCalculated = calculateChips(money);
+
+            const newPlayer = {
+                id: Date.now().toString(), // ID único simple
+                name: name,
+                money: money,
+                chips: chipsCalculated,
+                chipsOut: { white: 0, red: 0, blue: 0, green: 0, black: 0 } // Registro para el retiro final
+            };
+
+            players.push(newPlayer);
+            
+            // Limpiar formulario
+            nameInput.value = '';
+            moneyInput.value = '';
+            nameInput.focus();
+
+            renderPlayers();
+            updateSummary();
+        }
+
+        // Eliminar un jugador
+        function removePlayer(id) {
+            players = players.filter(player => player.id !== id);
+            renderPlayers();
+            updateSummary();
+        }
+
+        // Limpiar todos los jugadores
+        function clearAllPlayers() {
+            if(players.length === 0) return;
+            if (confirm('¿Estás seguro de que quieres eliminar a todos los jugadores y reiniciar la mesa?')) {
+                players = [];
+                renderPlayers();
+                updateSummary();
+            }
+        }
+
+        // Actualizar el valor de retiro cuando el jugador anota sus fichas finales
+        function updateCashOut(playerId, color, val) {
+            const player = players.find(p => p.id === playerId);
+            if (!player) return;
+            
+            let num = parseInt(val);
+            if (isNaN(num) || num < 0) num = 0;
+            
+            player.chipsOut[color] = num;
+            
+            // Calcular dinero total de retiro y balance
+            const payout = (player.chipsOut.white * chipValues.white) + 
+                           (player.chipsOut.red * chipValues.red) + 
+                           (player.chipsOut.blue * chipValues.blue) + 
+                           (player.chipsOut.green * chipValues.green) + 
+                           (player.chipsOut.black * chipValues.black);
+                           
+            const balance = payout - player.money;
+            
+            // Actualizar el DOM directamente para que el usuario no pierda el foco de donde está escribiendo
+            document.getElementById(`payout-${playerId}`).innerText = `$${payout.toFixed(2)}`;
+            
+            const balanceEl = document.getElementById(`balance-${playerId}`);
+            if (balance > 0) {
+                balanceEl.innerText = `Balance: +$${balance.toFixed(2)} (Ganancia)`;
+                balanceEl.className = "text-sm font-bold text-green-400 mt-1 block";
+            } else if (balance < 0) {
+                balanceEl.innerText = `Balance: -$${Math.abs(balance).toFixed(2)} (Pérdida)`;
+                balanceEl.className = "text-sm font-bold text-red-400 mt-1 block";
+            } else {
+                balanceEl.innerText = `Balance: $0.00 (Empate)`;
+                balanceEl.className = "text-sm font-bold text-slate-400 mt-1 block";
+            }
+        }
+
+        // Actualizar los totales globales
+        function updateSummary() {
+            let totalMoney = 0;
+            let totalChips = 0;
+
+            players.forEach(p => {
+                totalMoney += p.money;
+                totalChips += (p.chips.white + p.chips.red + p.chips.blue + p.chips.green + p.chips.black);
+            });
+
+            totalMoneyEl.innerText = `$${totalMoney.toFixed(2)}`;
+            totalChipsEl.innerText = totalChips;
+            playerCountEl.innerText = players.length;
+        }
+
+        // Renderizar la lista de jugadores en el DOM
+        function renderPlayers() {
+            // Limpiar contenedor actual
+            playersContainer.innerHTML = '';
+
+            if (players.length === 0) {
+                playersContainer.appendChild(emptyState);
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            players.forEach(player => {
+                // Calcular total de fichas de este jugador al inicio
+                const playerTotalChips = player.chips.white + player.chips.red + player.chips.blue + player.chips.green + player.chips.black;
+                
+                // Calcular estado actual del retiro
+                const payout = (player.chipsOut.white * chipValues.white) + 
+                               (player.chipsOut.red * chipValues.red) + 
+                               (player.chipsOut.blue * chipValues.blue) + 
+                               (player.chipsOut.green * chipValues.green) + 
+                               (player.chipsOut.black * chipValues.black);
+                const balance = payout - player.money;
+
+                // Crear elemento de tarjeta de jugador
+                const playerCard = document.createElement('div');
+                playerCard.className = 'bg-slate-700/50 rounded-lg p-5 border border-slate-600 transition-all hover:border-slate-500';
+                
+                playerCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-4 border-b border-slate-600/50 pb-3">
+                        <div>
+                            <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fa-solid fa-user-astronaut text-slate-400"></i> ${player.name}
+                            </h3>
+                            <p class="text-emerald-400 font-semibold mt-1">
+                                Entrada (Buy-in): $${player.money.toFixed(2)}
+                            </p>
+                        </div>
+                        <button onclick="removePlayer('${player.id}')" class="text-slate-400 hover:text-red-400 transition-colors p-2" title="Eliminar Jugador">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+                    
+                    <div>
+                        <p class="text-sm text-slate-400 mb-2 flex items-center justify-between">
+                            <span>Distribución Inicial:</span>
+                            <span class="bg-slate-800 px-2 py-1 rounded text-xs font-bold text-blue-300">${playerTotalChips} fichas</span>
+                        </p>
+                        <!-- Pequeño resumen de fichas iniciales -->
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            ${player.chips.black > 0 ? `<div class="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-slate-900 border border-slate-500"></span> ${player.chips.black}</div>` : ''}
+                            ${player.chips.green > 0 ? `<div class="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-emerald-600 border border-emerald-800"></span> ${player.chips.green}</div>` : ''}
+                            ${player.chips.blue > 0 ? `<div class="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-blue-600 border border-blue-800"></span> ${player.chips.blue}</div>` : ''}
+                            ${player.chips.red > 0 ? `<div class="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-600 border border-red-800"></span> ${player.chips.red}</div>` : ''}
+                            ${player.chips.white > 0 ? `<div class="bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-white border border-slate-300"></span> ${player.chips.white}</div>` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Sección de Retiro (Cash Out) -->
+                    <div class="bg-slate-800/80 rounded-lg p-4 mt-4 border border-slate-600 shadow-inner">
+                        <h4 class="text-white font-medium mb-3 border-b border-slate-700 pb-2 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-coins text-yellow-500"></i> Finalizar Partida (Anotar fichas)
+                        </h4>
+                        
+                        <div class="grid grid-cols-5 gap-2 mb-3">
+                            <div class="text-center">
+                                <div class="poker-chip chip-white mx-auto mb-1 transform scale-75"></div>
+                                <input type="number" min="0" value="${player.chipsOut.white || ''}" placeholder="0" oninput="updateCashOut('${player.id}', 'white', this.value)" class="input-dark w-full px-1 py-1 rounded text-center text-sm font-semibold">
+                            </div>
+                            <div class="text-center">
+                                <div class="poker-chip chip-red mx-auto mb-1 transform scale-75"></div>
+                                <input type="number" min="0" value="${player.chipsOut.red || ''}" placeholder="0" oninput="updateCashOut('${player.id}', 'red', this.value)" class="input-dark w-full px-1 py-1 rounded text-center text-sm font-semibold">
+                            </div>
+                            <div class="text-center">
+                                <div class="poker-chip chip-blue mx-auto mb-1 transform scale-75"></div>
+                                <input type="number" min="0" value="${player.chipsOut.blue || ''}" placeholder="0" oninput="updateCashOut('${player.id}', 'blue', this.value)" class="input-dark w-full px-1 py-1 rounded text-center text-sm font-semibold">
+                            </div>
+                            <div class="text-center">
+                                <div class="poker-chip chip-green mx-auto mb-1 transform scale-75"></div>
+                                <input type="number" min="0" value="${player.chipsOut.green || ''}" placeholder="0" oninput="updateCashOut('${player.id}', 'green', this.value)" class="input-dark w-full px-1 py-1 rounded text-center text-sm font-semibold">
+                            </div>
+                            <div class="text-center">
+                                <div class="poker-chip chip-black mx-auto mb-1 transform scale-75"></div>
+                                <input type="number" min="0" value="${player.chipsOut.black || ''}" placeholder="0" oninput="updateCashOut('${player.id}', 'black', this.value)" class="input-dark w-full px-1 py-1 rounded text-center text-sm font-semibold">
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900 rounded p-3 flex justify-between items-center">
+                            <span class="text-slate-400 text-sm font-medium">Plata Correspondiente:</span>
+                            <span id="payout-${player.id}" class="text-xl font-bold text-yellow-400">$${payout.toFixed(2)}</span>
+                        </div>
+                        <div class="text-right mt-1">
+                            <span id="balance-${player.id}" class="text-sm font-bold ${balance > 0 ? 'text-green-400' : balance < 0 ? 'text-red-400' : 'text-slate-400'} mt-1 block">
+                                Balance: ${balance > 0 ? '+' : ''}$${balance.toFixed(2)} ${balance > 0 ? '(Ganancia)' : balance < 0 ? '(Pérdida)' : '(Empate)'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+                
+                playersContainer.appendChild(playerCard);
+            });
+        }
+
+        // Inicialización al cargar la página
+        updateSummary();
+    </script>
+</body>
+</html>
